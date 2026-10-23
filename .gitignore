@@ -1,0 +1,23 @@
+# Data and models
+data/
+models/
+outputs/*.pt
+*.pth
+*.pt
+*.onnx
+
+# Environment
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
