@@ -1,5 +1,7 @@
 # Data and models
-data/
+data/*
+!data/processed/
+!data/processed/split.csv
 models/
 outputs/*.pt
 *.pth
