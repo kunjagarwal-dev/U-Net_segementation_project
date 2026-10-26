@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 from pathlib import Path
 from PIL import Image
@@ -41,6 +41,21 @@ class PetSegmentation(Dataset):
             mask_tensor = torch_tensor - 1
 
         return normalised_tensor, mask_tensor
+
+def get_dataloaders(csv_path, image_folder, trimap_folder,
+                    image_size=256, batch_size=16, num_workers=0):
+    train_ds = PetSegmentation(csv_path, "train", image_folder, trimap_folder, image_size)
+    val_ds = PetSegmentation(csv_path, "val", image_folder, trimap_folder, image_size)
+    test_ds = PetSegmentation(csv_path, "test", image_folder, trimap_folder, image_size)
+
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
+                              drop_last=True, num_workers=num_workers, pin_memory=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
+                            num_workers=num_workers, pin_memory=True)
+    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False,
+                             num_workers=num_workers, pin_memory=True)
+
+    return train_loader, val_loader, test_loader
 
 
 
