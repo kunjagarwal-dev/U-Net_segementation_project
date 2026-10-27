@@ -20,3 +20,19 @@ def class_iou(target, prediction, class_id):
     iou = intersection / union
     return iou.item()
 
+def class_dice(target, prediction, class_id):
+    target_count = target == class_id
+    prediction_count = prediction == class_id
+
+    intersection = (target_count & prediction_count).sum()
+    total = target_count.sum() + prediction_count.sum()
+
+    # Class absent from both
+    if total == 0:
+        return float("nan")
+
+    dice = 2*intersection / total
+    return dice.item()
+
+def class_mIou():
+    pass
