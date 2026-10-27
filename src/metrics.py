@@ -1,3 +1,5 @@
+import math
+
 def pixel_accuracy(target, prediction):
     # Compare all pixel at once
     grid = target == prediction
@@ -34,5 +36,21 @@ def class_dice(target, prediction, class_id):
     dice = 2*intersection / total
     return dice.item()
 
-def class_mIou():
-    pass
+def mean_iou(target, prediction, num_classes=3):
+    iou_lst = []
+
+    for i in range(num_classes):
+        result = class_iou(target, prediction, i)
+        if math.isnan(result):
+            continue
+
+        iou_lst.append(result)
+
+    if iou_lst == []:
+        return float("nan")
+
+    return sum(iou_lst) / len(iou_lst)
+
+
+        
+    
