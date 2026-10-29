@@ -30,3 +30,16 @@ class Down(nn.Module):
 
     def forward(self, x):
         return self.block(x)
+
+
+class Up(nn.Module):
+    def __init__(self, in_channel, out_channels) :
+        super().__init__()
+        self.up = nn.ConvTranspose2d(in_channel, in_channel//2, kernel_size=2, stride=2)
+        self.conv = DoubleConv(in_channel, out_channels)
+
+    def forward(self, x, skip):
+        x = self.up(x)
+        x = torch.cat([skip, x], dim=1)
+        x = self.conv(x)
+        return x
