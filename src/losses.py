@@ -1,3 +1,5 @@
+from typing import Any
+
 import torch
 import torch.nn as nn
 
@@ -16,3 +18,17 @@ def dice_loss(logits, target):
     loss = (1 - dice_per_class).mean()
 
     return loss
+
+class CombinedLoss(nn.Module):
+    def __init__(self, ce_weight=0.5, dice_weight=0.5) -> None:
+        super().__init__()
+        self.ce = nn.CrossEntropyLoss()
+
+        self.ce_weight = ce_weight
+        self.dice_weight = dice_weight
+
+    def forward(self, logits, target):
+        ce = self.ce(logits, target)
+        dice = dice_loss(logits, target)
+
+        return self.ce_weight * ce + self.dice_weight * dice
