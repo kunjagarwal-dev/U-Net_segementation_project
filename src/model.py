@@ -2,6 +2,7 @@ from typing import Any
 
 import torch 
 import torch.nn as nn
+import torchvision.models as models
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channel, out_channels):
@@ -87,6 +88,42 @@ class UpFlex(nn.Module):
         x = self.up(x)
         x = torch.cat([skip, x], dim=1)
         return self.conv(x)
+
+class PretrainedUNet(nn.Module):
+    def __init__(self, num_classes=3, pretrained=True):
+        super().__init__()
+        weights = models.ResNet34_Weights.DEFAULT if pretrained else None
+        resnet = models.resnet34(weights=weights)
+
+        # Encoder: pieces taken from ResNet34
+        self.stem = nn.Sequential(resnet.conv1, resnet.bn1, resnet.relu)  # 64, 128x128
+        self.pool = resnet.maxpool
+        self.layer1 = resnet.layer1   # 64,  64x64
+        self.layer2 = resnet.layer2   # 128, 32x32
+        self.layer3 = resnet.layer3   # 256, 16x16
+        self.layer4 = resnet.layer4   # 512, 8x8
+
+        # Decoder
+        self.up1 = Up(512, 256)               # skip: layer3 (256)
+        self.up2 = Up(256, 128)               # skip: layer2 (128)
+        self.up3 = Up(128, 64)                # skip: layer1 (64)
+        self.up4 = UpFlex(64, 64, 32)         # skip: stem (64), goes to 128x128
+        self.final_up = nn.ConvTranspose2d(32, 32, kernel_size=2, stride=2)  # 256x256
+        self.outc = nn.Conv2d(32, num_classes, kernel_size=1)
+
+    def forward(self, x):
+        s0 = self.stem(x)                # 64,  128
+        s1 = self.layer1(self.pool(s0))  # 64,  64
+        s2 = self.layer2(s1)             # 128, 32
+        s3 = self.layer3(s2)             # 256, 16
+        b = self.layer4(s3)              # 512, 8
+
+        x = self.up1(b, s3)              # 256, 16
+        x = self.up2(x, s2)              # 128, 32
+        x = self.up3(x, s1)              # 64,  64
+        x = self.up4(x, s0)              # 32,  128
+        x = self.final_up(x)             # 32,  256
+        return self.outc(x)              # 3,   256
 
 
 
