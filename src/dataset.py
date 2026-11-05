@@ -1,6 +1,6 @@
+import csv
 import torch
 from torch.utils.data import Dataset, DataLoader
-import pandas as pd
 from pathlib import Path
 from PIL import Image
 import numpy as np
@@ -46,8 +46,12 @@ class PetSegmentation(Dataset):
             mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
         )
 
-        self.df = pd.read_csv(self.path)
-        self.stems = self.df.loc[self.df["split"] == self.split, "stem"].tolist()
+        with open(self.path, newline="", encoding="utf-8") as csv_file:
+            self.stems = [
+                row["stem"]
+                for row in csv.DictReader(csv_file)
+                if row["split"] == self.split
+            ]
 
     def __len__(self):
         return len(self.stems)
